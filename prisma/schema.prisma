@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String
+  passwordHash  String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  transactions  Transaction[]
+  dailySettings DailySetting[]
+  settings      UserSettings?
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String
+  amount      Float
+  commission  Float    @default(0)
+  phoneNumber String?
+  note        String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model DailySetting {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date          DateTime
+  startingFloat Float
+  actualCash    Float?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+model UserSettings {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shopName             String   @default("My MoMo Shop")
+  defaultStartingFloat Float    @default(500)
+  commissionRate       Float    @default(0.01)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
